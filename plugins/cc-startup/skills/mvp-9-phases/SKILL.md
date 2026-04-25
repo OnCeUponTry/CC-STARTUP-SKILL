@@ -65,6 +65,7 @@ interaction modes are used, deliberately:
 | Phase 8 — per-fix approval                          | `AskUserQuestion` 1 question × 3 opts (APPROVE/MODIFY/REJECT) |
 | Phase 8 — efficiency optimization plan              | `AskUserQuestion` per optimization (multiSelect) |
 | Phase 9 — UX finding classification                 | `AskUserQuestion` 1 question × 3 opts (BLOCKER/FRICTION/DESIRE) |
+| Phase 9 — per-finding disposition                   | `AskUserQuestion` 1 question × 3 opts (resolve now / defer to MEJORAS / discard) |
 
 **Why this matters:** structured decisions with `AskUserQuestion` give the user
 a clean UI (radio buttons, checkboxes, side-by-side previews) and make the
@@ -201,16 +202,20 @@ invocation):
 - Method — single-select: user's projects / open-source / synthetic
 - Test count — single-select: 2 / 3-5 / 6-10 / more
 
-**Execute and audit one by one** — gate each transition with `AskUserQuestion`:
+**Execute and audit one test at a time** — for the current test, run steps
+1-4 in order, then complete classification before moving to the next test:
 
 1. Run the product
 2. Review each finding via `AskUserQuestion` (1 question × 2 options:
    true positive / false positive)
 3. Identify gaps: what should it have detected and didn't?
 4. Measure performance: time, memory, I/O
-5. Present results; gate "next test" via `AskUserQuestion`
-   (next test / re-run this test / stop here)
-6. Classify each gap via `AskUserQuestion` (CRITICAL / IMPROVEMENT)
+5. **After** all findings of this test have been reviewed, classify each
+   gap collected so far via `AskUserQuestion` (CRITICAL / IMPROVEMENT).
+   Do NOT interleave classification with review — finish the review pass
+   first, then classify in a separate pass.
+6. Present consolidated results; gate "next test" via `AskUserQuestion`
+   (next test / re-run this test / stop here).
 
 CRITICAL gaps must be resolved before publishing. IMPROVEMENT gaps go to
 `MEJORAS.md` unless trivial (<15 min).
@@ -222,8 +227,9 @@ CRITICAL gaps must be resolved before publishing. IMPROVEMENT gaps go to
 Cycle until convergence. Ask the user before EVERY action.
 
 **Focus A — Fix gaps from Phase 7:**
-For each gap: classify (CRITICAL/IMPROVEMENT) → design fix → present proposal
-via `AskUserQuestion` (APPROVE / MODIFY / REJECT) → implement → re-validate
+For each gap **already classified CRITICAL in Phase 7** (classification
+happens in Phase 7, not here): design fix → present proposal via
+`AskUserQuestion` (APPROVE / MODIFY / REJECT) → implement → re-validate
 against the same test that found it → check non-regression.
 
 **Focus B — Efficiency (three criteria):**
