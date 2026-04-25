@@ -1,9 +1,12 @@
 # CC-STARTUP-SKILL
 
-A collection of [Claude Code](https://claude.com/claude-code) skills for
-disciplined project startup. Each skill is a self-contained folder with a
-`SKILL.md` that the agent reads when relevant context is detected, or when
-invoked explicitly with `/<skill-name>`.
+[Claude Code](https://claude.com/claude-code) skills and plugin for
+disciplined project startup. The repository ships as both:
+
+- a **plugin marketplace** (`cc-startup-skill`) installable via `/plugin
+  marketplace add OnCeUponTry/CC-STARTUP-SKILL`, and
+- raw skill folders that can be copied into `~/.claude/skills/` directly or
+  via a one-line install script.
 
 > Skills are Claude Code's mechanism for packaging procedural knowledge: a
 > markdown file with `name` and `description` frontmatter that Claude loads on
@@ -11,9 +14,9 @@ invoked explicitly with `/<skill-name>`.
 
 ## Skills in this repository
 
-| Skill                                | What it does                                                           |
-|--------------------------------------|------------------------------------------------------------------------|
-| [`mvp-9-phases`](./mvp-9-phases/)    | Nine-phase, interrogation-driven flow for building any new product from scratch. The agent informs, the user decides. Outputs are deterministic and measurable. |
+| Skill                                                        | What it does                                                           |
+|--------------------------------------------------------------|------------------------------------------------------------------------|
+| [`mvp-9-phases`](./plugins/cc-startup/skills/mvp-9-phases/)  | Nine-phase, interrogation-driven flow for building any new product from scratch. The agent informs, the user decides. Outputs are deterministic and measurable. |
 
 ## Prerequisites — install Claude Code
 
@@ -32,50 +35,91 @@ If you don't have Claude Code yet, install it first. The official commands
 Native Windows additionally requires [Git for Windows](https://git-scm.com/downloads/win).
 Verify with `claude --version` or `claude doctor`.
 
-## Install this skill
+## Install
 
-Skills are read from `~/.claude/skills/` (personal, all projects) or
-`.claude/skills/` (per-project). The Claude Code CLI, the **VS Code extension**,
-and the **Desktop app** all read from the same locations — install once, use
-from any of them.
+Three methods, in order of simplicity. Pick whichever fits your workflow.
 
-### macOS / Linux / WSL
+### Method 1 — Plugin (recommended)
+
+Install from inside a Claude Code session, no terminal copy-paste required.
+Skills installed this way are versioned, auto-update friendly, and namespaced
+under `cc-startup`.
+
+```text
+/plugin marketplace add OnCeUponTry/CC-STARTUP-SKILL
+/plugin install cc-startup@cc-startup-skill
+/reload-plugins
+```
+
+Skills become available as `/cc-startup:mvp-9-phases` (note the `cc-startup:`
+namespace prefix — this is how plugin skills are addressed in Claude Code).
+
+### Method 2 — One-line install script
+
+For users who prefer a shell one-liner. The script downloads the latest
+`main` branch, copies the skill folder into `~/.claude/skills/`, and prints
+verification steps. Skills become available as `/mvp-9-phases` (no prefix).
+
+**macOS / Linux / WSL:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/OnCeUponTry/CC-STARTUP-SKILL/main/install.sh | bash
+```
+
+**Windows PowerShell:**
+
+```powershell
+irm https://raw.githubusercontent.com/OnCeUponTry/CC-STARTUP-SKILL/main/install.ps1 | iex
+```
+
+The scripts are idempotent — re-running them updates an existing install.
+
+### Method 3 — Manual copy
+
+For users who want full control over what lands on disk.
+
+**macOS / Linux / WSL:**
 
 ```bash
 git clone https://github.com/OnCeUponTry/CC-STARTUP-SKILL.git
 mkdir -p ~/.claude/skills
-cp -r CC-STARTUP-SKILL/mvp-9-phases ~/.claude/skills/
+cp -r CC-STARTUP-SKILL/plugins/cc-startup/skills/mvp-9-phases ~/.claude/skills/
 ```
 
-Or, for local development with live edits:
+For local development with live edits, symlink instead of copy:
 
 ```bash
-ln -s "$PWD/CC-STARTUP-SKILL/mvp-9-phases" ~/.claude/skills/mvp-9-phases
+ln -s "$PWD/CC-STARTUP-SKILL/plugins/cc-startup/skills/mvp-9-phases" ~/.claude/skills/mvp-9-phases
 ```
 
-### Windows (PowerShell, native)
+**Windows (PowerShell, native):**
 
 ```powershell
 git clone https://github.com/OnCeUponTry/CC-STARTUP-SKILL.git
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills" | Out-Null
-Copy-Item -Recurse CC-STARTUP-SKILL\mvp-9-phases "$env:USERPROFILE\.claude\skills\"
+Copy-Item -Recurse CC-STARTUP-SKILL\plugins\cc-startup\skills\mvp-9-phases "$env:USERPROFILE\.claude\skills\"
 ```
 
-### Windows + WSL
-
-Inside the WSL terminal, follow the **macOS / Linux / WSL** instructions above.
-Skills installed in WSL are available to Claude Code launched inside WSL.
-
-### Per-project install (any OS)
+**Per-project install (any OS):**
 
 To make the skill available only inside a specific repository, copy it under
 `.claude/skills/` in that repo and commit it:
 
 ```bash
 mkdir -p .claude/skills
-cp -r CC-STARTUP-SKILL/mvp-9-phases .claude/skills/
+cp -r CC-STARTUP-SKILL/plugins/cc-startup/skills/mvp-9-phases .claude/skills/
 git add .claude/skills/mvp-9-phases && git commit -m "Add mvp-9-phases skill"
 ```
+
+### Where skills live (reference)
+
+| Scope     | Linux/macOS                              | Windows                                       |
+|-----------|------------------------------------------|-----------------------------------------------|
+| Personal  | `~/.claude/skills/<name>/SKILL.md`       | `%USERPROFILE%\.claude\skills\<name>\SKILL.md`|
+| Project   | `.claude/skills/<name>/SKILL.md`         | `.claude\skills\<name>\SKILL.md`              |
+
+The Claude Code CLI, the VS Code extension, and the Desktop app all read from
+the same locations — install once, use from any of them.
 
 ### Verify
 
@@ -86,7 +130,8 @@ confirm the skill is loaded, ask Claude:
 What skills are available?
 ```
 
-`mvp-9-phases` should appear in the list.
+For plugin install: `cc-startup:mvp-9-phases` appears in the list.
+For script/manual install: `mvp-9-phases` appears in the list.
 
 ## Usage
 
@@ -95,7 +140,9 @@ Skills can be invoked two ways:
 1. **Automatic** — Claude loads the skill when its `description` matches the
    conversation context. For `mvp-9-phases`, that triggers when you ask to
    create a new project, product, tool, or service from scratch.
-2. **Explicit** — type `/mvp-9-phases` to invoke it directly.
+2. **Explicit** — type the slash command to invoke it directly.
+   - Plugin install: `/cc-startup:mvp-9-phases`
+   - Script / manual install: `/mvp-9-phases`
 
 For `mvp-9-phases` specifically, invoke it at the very start of a new project,
 **before the first file is written**. The skill drives a guided
@@ -148,16 +195,19 @@ Copyright (c) 2026 Carlos Enrique Castro Lazaro.
 
 ## Versión en español
 
-Una colección de skills para [Claude Code](https://claude.com/claude-code)
-orientadas a empezar proyectos con disciplina. Cada skill es una carpeta
-autocontenida con un `SKILL.md` que el agente lee cuando detecta contexto
-relevante, o cuando se invoca explícitamente con `/<nombre-de-la-skill>`.
+Skills y plugin de [Claude Code](https://claude.com/claude-code) orientadas a
+empezar proyectos con disciplina. El repositorio se distribuye como:
+
+- un **marketplace de plugins** (`cc-startup-skill`) instalable con `/plugin
+  marketplace add OnCeUponTry/CC-STARTUP-SKILL`, y
+- carpetas de skill crudas que se pueden copiar a `~/.claude/skills/`
+  directamente o vía un script de instalación de una sola línea.
 
 ### Skills en este repositorio
 
-| Skill                                | Qué hace                                                              |
-|--------------------------------------|-----------------------------------------------------------------------|
-| [`mvp-9-phases`](./mvp-9-phases/)    | Flujo de 9 fases dirigido por interrogación para crear cualquier producto desde cero. El agente informa, el usuario decide. Los resultados son deterministas y medibles. |
+| Skill                                                        | Qué hace                                                              |
+|--------------------------------------------------------------|-----------------------------------------------------------------------|
+| [`mvp-9-phases`](./plugins/cc-startup/skills/mvp-9-phases/)  | Flujo de 9 fases dirigido por interrogación para crear cualquier producto desde cero. El agente informa, el usuario decide. Los resultados son deterministas y medibles. |
 
 ### Requisitos previos — instalar Claude Code
 
@@ -176,51 +226,94 @@ Si todavía no tenés Claude Code, instalalo primero. Comandos oficiales
 Windows nativo requiere también [Git for Windows](https://git-scm.com/downloads/win).
 Verificá con `claude --version` o `claude doctor`.
 
-### Instalar esta skill
+### Instalación
 
-Las skills se leen desde `~/.claude/skills/` (personal, todos los proyectos) o
-desde `.claude/skills/` (por proyecto). Claude Code CLI, la **extensión de
-VS Code** y la **app de escritorio** leen del mismo lugar — instalás una vez
-y queda disponible en todos.
+Tres métodos, en orden de simpleza. Elegí el que mejor calce con tu flujo.
 
-#### macOS / Linux / WSL
+#### Método 1 — Plugin (recomendado)
+
+Instalar desde una sesión de Claude Code, sin copiar y pegar en la terminal.
+Las skills instaladas así son versionadas, soportan auto-update y van
+namespaced bajo `cc-startup`.
+
+```text
+/plugin marketplace add OnCeUponTry/CC-STARTUP-SKILL
+/plugin install cc-startup@cc-startup-skill
+/reload-plugins
+```
+
+Las skills quedan disponibles como `/cc-startup:mvp-9-phases` (notá el
+prefijo `cc-startup:` — así se direccionan las skills de plugin en Claude
+Code).
+
+#### Método 2 — Script de una línea
+
+Para usuarios que prefieren un one-liner de shell. El script descarga la
+última versión de `main`, copia la carpeta de la skill a `~/.claude/skills/`
+e imprime los pasos de verificación. Las skills quedan disponibles como
+`/mvp-9-phases` (sin prefijo).
+
+**macOS / Linux / WSL:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/OnCeUponTry/CC-STARTUP-SKILL/main/install.sh | bash
+```
+
+**Windows PowerShell:**
+
+```powershell
+irm https://raw.githubusercontent.com/OnCeUponTry/CC-STARTUP-SKILL/main/install.ps1 | iex
+```
+
+Los scripts son idempotentes — re-ejecutarlos actualiza una instalación
+existente.
+
+#### Método 3 — Copia manual
+
+Para quienes quieren control total sobre lo que va a parar al disco.
+
+**macOS / Linux / WSL:**
 
 ```bash
 git clone https://github.com/OnCeUponTry/CC-STARTUP-SKILL.git
 mkdir -p ~/.claude/skills
-cp -r CC-STARTUP-SKILL/mvp-9-phases ~/.claude/skills/
+cp -r CC-STARTUP-SKILL/plugins/cc-startup/skills/mvp-9-phases ~/.claude/skills/
 ```
 
-O, para desarrollo local con edición en vivo:
+Para desarrollo local con edición en vivo, usá symlink en lugar de copia:
 
 ```bash
-ln -s "$PWD/CC-STARTUP-SKILL/mvp-9-phases" ~/.claude/skills/mvp-9-phases
+ln -s "$PWD/CC-STARTUP-SKILL/plugins/cc-startup/skills/mvp-9-phases" ~/.claude/skills/mvp-9-phases
 ```
 
-#### Windows (PowerShell, nativo)
+**Windows (PowerShell, nativo):**
 
 ```powershell
 git clone https://github.com/OnCeUponTry/CC-STARTUP-SKILL.git
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills" | Out-Null
-Copy-Item -Recurse CC-STARTUP-SKILL\mvp-9-phases "$env:USERPROFILE\.claude\skills\"
+Copy-Item -Recurse CC-STARTUP-SKILL\plugins\cc-startup\skills\mvp-9-phases "$env:USERPROFILE\.claude\skills\"
 ```
 
-#### Windows + WSL
-
-Dentro de la terminal de WSL seguí las instrucciones de **macOS / Linux / WSL**
-de arriba. Las skills instaladas en WSL están disponibles para el Claude Code
-que se ejecuta dentro de WSL.
-
-#### Instalación por proyecto (cualquier OS)
+**Instalación por proyecto (cualquier OS):**
 
 Para que la skill esté disponible solo dentro de un repo específico, copiala
 bajo `.claude/skills/` en ese repo y commiteala:
 
 ```bash
 mkdir -p .claude/skills
-cp -r CC-STARTUP-SKILL/mvp-9-phases .claude/skills/
+cp -r CC-STARTUP-SKILL/plugins/cc-startup/skills/mvp-9-phases .claude/skills/
 git add .claude/skills/mvp-9-phases && git commit -m "Add mvp-9-phases skill"
 ```
+
+#### Dónde viven las skills (referencia)
+
+| Scope     | Linux/macOS                              | Windows                                       |
+|-----------|------------------------------------------|-----------------------------------------------|
+| Personal  | `~/.claude/skills/<nombre>/SKILL.md`     | `%USERPROFILE%\.claude\skills\<nombre>\SKILL.md`|
+| Proyecto  | `.claude/skills/<nombre>/SKILL.md`       | `.claude\skills\<nombre>\SKILL.md`            |
+
+Claude Code CLI, la extensión de VS Code y la app de escritorio leen del
+mismo lugar — instalás una vez y queda disponible en todos.
 
 #### Verificar
 
@@ -231,7 +324,8 @@ detection). Para confirmar que la skill está cargada, preguntale a Claude:
 ¿Qué skills están disponibles?
 ```
 
-`mvp-9-phases` debería aparecer en la lista.
+Plugin install: aparece `cc-startup:mvp-9-phases`.
+Script / manual install: aparece `mvp-9-phases`.
 
 ### Uso
 
@@ -240,7 +334,9 @@ Las skills se invocan de dos maneras:
 1. **Automática** — Claude carga la skill cuando su `description` coincide con
    el contexto de la conversación. Para `mvp-9-phases`, eso pasa cuando pedís
    crear un proyecto, producto, herramienta o servicio nuevo desde cero.
-2. **Explícita** — escribís `/mvp-9-phases` para invocarla directamente.
+2. **Explícita** — escribís el slash command para invocarla directamente.
+   - Plugin install: `/cc-startup:mvp-9-phases`
+   - Script / manual install: `/mvp-9-phases`
 
 Para `mvp-9-phases` específicamente, invocala al inicio de un proyecto nuevo,
 **antes de escribir el primer archivo**. La skill conduce una interrogación

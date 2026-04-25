@@ -1,0 +1,28 @@
+{
+  "name": "cc-startup-skill",
+  "owner": {
+    "name": "Carlos Enrique Castro Lazaro",
+    "email": "the@angriestboy.com",
+    "url": "https://github.com/OnCeUponTry"
+  },
+  "metadata": {
+    "description": "Claude Code skills for disciplined project startup. Currently ships cc-startup, with mvp-9-phases for building any new product from scratch.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "cc-startup",
+      "source": "./plugins/cc-startup",
+      "description": "Disciplined project startup. Includes mvp-9-phases: a nine-phase, interrogation-driven flow for building any new product, tool or service from scratch. The agent informs, the user decides — outputs are deterministic and measurable.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Carlos Enrique Castro Lazaro",
+        "email": "the@angriestboy.com",
+        "url": "https://github.com/OnCeUponTry"
+      },
+      "homepage": "https://github.com/OnCeUponTry/CC-STARTUP-SKILL",
+      "license": "MIT OR Apache-2.0",
+      "keywords": ["mvp", "project-startup", "interrogation", "disciplined", "claude-code"]
+    }
+  ]
+}
