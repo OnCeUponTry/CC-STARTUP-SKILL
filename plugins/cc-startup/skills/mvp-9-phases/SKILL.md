@@ -52,7 +52,9 @@ interaction modes are used, deliberately:
 
 | Phase / gate                                        | Mode                                  |
 |-----------------------------------------------------|---------------------------------------|
-| Phase 1 — name, problem, user, demo path            | Plain chat                            |
+| Phase 1 — name, problem                             | Plain chat                            |
+| Phase 1 — user, expected output, demo path          | `AskUserQuestion` batched (3 questions, single-select) |
+| Phase 1 — scope per-candidate                       | `AskUserQuestion` 1 question × 2 opts (INCLUDE / EXCLUDE→MEJORAS) |
 | Phase 1 — propose 2-4 architecture sketches         | `AskUserQuestion` with `preview`      |
 | Phase 2 — differentiator narrative                  | Plain chat                            |
 | Phase 2 — pivot/integrate/differentiate decision    | `AskUserQuestion` (3 options)         |
@@ -72,27 +74,43 @@ a clean UI (radio buttons, checkboxes, side-by-side previews) and make the
 audit trail unambiguous. Free-form prompts in plain chat are reserved for
 content that can't be reduced to a small option set.
 
+**Batching rule:**
+
+- **Independent items** (different attributes of the same phase, e.g., user
+  type + expected output + demo path) → batch up to 4 in a single
+  `AskUserQuestion` invocation.
+- **Members of the same set** (each gap, each scope candidate, each finding,
+  each fix) → one question at a time, NEVER batched. The decision on each
+  member must be atomic and uncontaminated by the others.
+
 ---
 
 ## Phase 1 — E2E Definition
 
-Before writing any code, answer with the user:
+Before writing any code, answer with the user. Items 1-2 are plain chat (free-
+form). Items 3, 6, 7 are batched in a single `AskUserQuestion` invocation
+(three single-select questions). Item 4 is per-candidate `AskUserQuestion`.
+Item 5 is `AskUserQuestion` with `preview`.
 
 1. **Name** — 2-3 words, self-descriptive, unique within the user's ecosystem
-2. **Problem** — one sentence: what concrete problem it solves
-3. **User** — who uses it (developer, admin, end-user, another system)
+   (plain chat).
+2. **Problem** — one sentence: what concrete problem it solves (plain chat).
+3. **User** — who uses it. Single-select: developer / admin / end-user /
+   another system (`AskUserQuestion`, batched with 6 and 7).
 4. **Minimum viable scope** — a CLOSED list of features mandatory for the
    product to work end-to-end. Removing any one of them breaks the purpose.
-   For each candidate item, confirm INCLUSION explicitly with the user before
-   it enters the scope — never assume an item is in or out by silent
-   omission. Items not confirmed go to Phase 4 (improvements).
+   Propose candidates, then for EACH candidate ask `AskUserQuestion` 1
+   question × 2 options (INCLUDE / EXCLUDE→MEJORAS). Never batch scope
+   candidates into one question — each decision is atomic. Items not
+   confirmed go to Phase 4 (improvements).
 5. **Minimum architecture** — modules, files, dependencies needed for the
    E2E. Propose 2-4 architecture sketches via `AskUserQuestion` with
    `preview` (rendered file trees / module diagrams) so the user can compare
    side-by-side and pick one.
-6. **Expected output** — what the product produces (binary, report, page, API,
-   file)
-7. **Demo path** — how it is shown to work (command, URL, screenshot, test)
+6. **Expected output** — what the product produces. Single-select: binary /
+   report / page / API / file (`AskUserQuestion`, batched with 3 and 7).
+7. **Demo path** — how it is shown to work. Single-select: command / URL /
+   screenshot / test (`AskUserQuestion`, batched with 3 and 6).
 
 **If** the MVP spans multiple domains/targets, prioritize the one with the
 **greatest measurable impact**: where does the problem cause the most
@@ -315,6 +333,10 @@ validated against these rules BEFORE creating files.
 - Running tests in batch without reviewing one by one
 - Publishing without the user trying the product (skipping Phase 9)
 - The agent decides which improvement to implement without asking
+- Asking discrete-option items (user type, output type, demo path) in plain
+  chat when `AskUserQuestion` is the right mode
+- Batching members of the same set (gaps, scope candidates, findings, fixes)
+  into a single question instead of one-by-one
 
 ---
 
