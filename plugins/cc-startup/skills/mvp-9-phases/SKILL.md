@@ -81,15 +81,22 @@ Before writing any code, answer with the user:
 2. **Problem** — one sentence: what concrete problem it solves
 3. **User** — who uses it (developer, admin, end-user, another system)
 4. **Minimum viable scope** — a CLOSED list of features mandatory for the
-   product to work end-to-end. Removing any one of them breaks the purpose
-5. **Minimum architecture** — modules, files, dependencies needed for the E2E
+   product to work end-to-end. Removing any one of them breaks the purpose.
+   For each candidate item, confirm INCLUSION explicitly with the user before
+   it enters the scope — never assume an item is in or out by silent
+   omission. Items not confirmed go to Phase 4 (improvements).
+5. **Minimum architecture** — modules, files, dependencies needed for the
+   E2E. Propose 2-4 architecture sketches via `AskUserQuestion` with
+   `preview` (rendered file trees / module diagrams) so the user can compare
+   side-by-side and pick one.
 6. **Expected output** — what the product produces (binary, report, page, API,
    file)
 7. **Demo path** — how it is shown to work (command, URL, screenshot, test)
 
-When the MVP spans multiple domains/targets, prioritize the one with the
+**If** the MVP spans multiple domains/targets, prioritize the one with the
 **greatest measurable impact**: where does the problem cause the most
 quantifiable damage? That one goes first. The rest are later improvements.
+For single-domain MVPs, this rule does not apply — skip it.
 
 → Document in `DEFINICION.md § Phase 1`.
 
