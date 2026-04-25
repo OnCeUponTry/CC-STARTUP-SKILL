@@ -1,6 +1,7 @@
 ---
 name: mvp-9-phases
 description: Nine-phase procedure for creating any product, tool, service or project from scratch through interrogation. The agent never decides what enters the MVP — it asks, proposes, measures, documents; the user decides. Applies to any language, platform or domain. Invoke when the user asks to create a new project/product/tool, or when about to write the first file of an empty repository. Do NOT invoke for modifications to existing projects.
+allowed-tools: AskUserQuestion
 ---
 
 # MVP from Scratch — 9 Mandatory Phases
@@ -37,6 +38,41 @@ it until it does. A small finished product beats an ambitious half-finished one.
 
 ---
 
+## Interaction protocol
+
+Each phase has gates where the user must approve, choose, or classify. Two
+interaction modes are used, deliberately:
+
+- **Plain chat** — for open-ended, free-form answers (project name, problem
+  statement, differentiator narrative, finding descriptions).
+- **`AskUserQuestion` tool** — for structured decisions where the answer fits
+  one of a small set of predefined options. Up to 4 questions can be batched
+  into a single invocation. Each option may include a `preview` for visual
+  side-by-side comparison (e.g., proposed file trees, architecture sketches).
+
+| Phase / gate                                        | Mode                                  |
+|-----------------------------------------------------|---------------------------------------|
+| Phase 1 — name, problem, user, demo path            | Plain chat                            |
+| Phase 1 — propose 2-4 architecture sketches         | `AskUserQuestion` with `preview`      |
+| Phase 2 — differentiator narrative                  | Plain chat                            |
+| Phase 2 — pivot/integrate/differentiate decision    | `AskUserQuestion` (3 options)         |
+| Phase 3 — scope questionnaire (5 questions)         | `AskUserQuestion` batched (4 + 1)     |
+| Phase 5 — per-gap strategy approval                 | `AskUserQuestion` 1 question × 3 opts (RESOLVE/NARROW/DEFER) |
+| Phase 6 — coherence doubts                          | Plain chat (one at a time)            |
+| Phase 7 — test scope (datasets, count, method)      | `AskUserQuestion` batched (multiSelect for datasets, single-select for method) |
+| Phase 7 — per-finding true/false positive           | `AskUserQuestion` 1 question × 2 opts |
+| Phase 7 — gap severity classification               | `AskUserQuestion` 1 question × 2 opts (CRITICAL/IMPROVEMENT) |
+| Phase 8 — per-fix approval                          | `AskUserQuestion` 1 question × 3 opts (APPROVE/MODIFY/REJECT) |
+| Phase 8 — efficiency optimization plan              | `AskUserQuestion` per optimization (multiSelect) |
+| Phase 9 — UX finding classification                 | `AskUserQuestion` 1 question × 3 opts (BLOCKER/FRICTION/DESIRE) |
+
+**Why this matters:** structured decisions with `AskUserQuestion` give the user
+a clean UI (radio buttons, checkboxes, side-by-side previews) and make the
+audit trail unambiguous. Free-form prompts in plain chat are reserved for
+content that can't be reduced to a small option set.
+
+---
+
 ## Phase 1 — E2E Definition
 
 Before writing any code, answer with the user:
@@ -66,9 +102,9 @@ papers) for projects that solve the SAME problem. Document:
 - **What it lacks** — concrete gap the new project covers
 - **Differentiator** — the one thing that justifies this project's existence
 
-If no clear differentiator emerges, ask the user:
-"There are N projects already solving this. Differentiate by X, integrate with
-an existing one, or change the problem?"
+If no clear differentiator emerges, use `AskUserQuestion` with three options:
+**Differentiate** (commit to a unique angle), **Integrate** (build on top of an
+existing project), **Change problem** (drop and pick a different one).
 
 The project does not advance without a confirmed differentiator.
 
@@ -114,9 +150,15 @@ Identify ALL known limitations of the MVP. For each gap:
    - **DEFER** — move it to `MEJORAS.md` with justification
 4. **Verification** — how the mitigation is checked
 
-**One-by-one approval**: each gap is presented to the user individually.
-"Gap N: [...]. Strategy: [RESOLVE/NARROW/DEFER] — [...]. Approved?"
-The MVP does not advance with any gap that lacks an approved strategy.
+**One-by-one approval**: each gap is presented to the user individually via
+`AskUserQuestion` with three options — **RESOLVE**, **NARROW**, **DEFER** —
+each option's description showing the proposed action for that gap. The
+question header is the gap number/name; the question body states the
+limitation and impact.
+
+Never batch gap approvals into a single question — the user must decide each
+one in isolation. The MVP does not advance with any gap that lacks an approved
+strategy.
 
 → Document in `DEFINICION.md § Phase 5`.
 
@@ -144,22 +186,24 @@ already authorized the start by approving Phases 1-5.
 
 After the MVP is functional, before publishing. Ask the user at every step.
 
-**Define test scope:**
+**Define test scope** with `AskUserQuestion` batched (up to 4 questions per
+invocation):
 
-- Which projects/datasets to validate against? (propose options from the user's
-  systems)
-- How many tests? (minimum 2, no maximum)
-- Method? (a) the user's own projects, (b) open-source, (c) synthetic dataset
+- Datasets to validate against — `multiSelect: true`, options proposed from
+  the user's systems
+- Method — single-select: user's projects / open-source / synthetic
+- Test count — single-select: 2 / 3-5 / 6-10 / more
 
-**Execute and audit one by one** — ask the user between each test:
+**Execute and audit one by one** — gate each transition with `AskUserQuestion`:
 
 1. Run the product
-2. Review each finding: true positive or false positive?
+2. Review each finding via `AskUserQuestion` (1 question × 2 options:
+   true positive / false positive)
 3. Identify gaps: what should it have detected and didn't?
 4. Measure performance: time, memory, I/O
-5. Present to the user; the user decides whether to move to the next test
-6. Document gaps with severity: **CRITICAL** (incorrect result) or
-   **IMPROVEMENT** (works but improvable)
+5. Present results; gate "next test" via `AskUserQuestion`
+   (next test / re-run this test / stop here)
+6. Classify each gap via `AskUserQuestion` (CRITICAL / IMPROVEMENT)
 
 CRITICAL gaps must be resolved before publishing. IMPROVEMENT gaps go to
 `MEJORAS.md` unless trivial (<15 min).
@@ -171,9 +215,9 @@ CRITICAL gaps must be resolved before publishing. IMPROVEMENT gaps go to
 Cycle until convergence. Ask the user before EVERY action.
 
 **Focus A — Fix gaps from Phase 7:**
-For each gap: classify (CRITICAL/IMPROVEMENT) → design fix → present proposal →
-implement → re-validate against the same test that found it → check
-non-regression.
+For each gap: classify (CRITICAL/IMPROVEMENT) → design fix → present proposal
+via `AskUserQuestion` (APPROVE / MODIFY / REJECT) → implement → re-validate
+against the same test that found it → check non-regression.
 
 **Focus B — Efficiency (three criteria):**
 
@@ -212,14 +256,14 @@ acceptable.
 
 A CLI has different aspects from an API, a web service, or a library — adapt.
 
-**Classify each finding:**
+**Classify each finding** via `AskUserQuestion` (1 question × 3 options):
 
 - **BLOCKER** — prevents functional use
 - **FRICTION** — works but improvable
 - **DESIRE** — something the user wants and doesn't exist yet
 
-Present ALL findings. The user decides which to resolve, which to defer, and
-which to discard.
+After classification, present ALL findings and gate disposition via
+`AskUserQuestion` per finding (resolve now / defer to MEJORAS.md / discard).
 
 → Document in `DEFINICION.md § Phase 9`.
 
